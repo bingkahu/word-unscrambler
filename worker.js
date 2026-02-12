@@ -1,187 +1,125 @@
-/* Lexicon Ultra - Web Worker
- * Handles Dictionary IO, Search Algorithms, and Scoring
- */
+/* Lexicon Titan - Background Worker */
 
 let dictionary = [];
-let dictionarySet = new Set();
 let isReady = false;
 
-// Scrabble Scores
-const SCORES = {
-    a: 1, b: 3, c: 3, d: 2, e: 1, f: 4, g: 2, h: 4, i: 1, j: 8, k: 5, l: 1, m: 3,
-    n: 1, o: 1, p: 3, q: 10, r: 1, s: 1, t: 1, u: 1, v: 4, w: 4, x: 8, y: 4, z: 10
+// Scrabble Point Values
+const POINTS = {
+    a:1, b:3, c:3, d:2, e:1, f:4, g:2, h:4, i:1, j:8, k:5, l:1, m:3,
+    n:1, o:1, p:3, q:10, r:1, s:1, t:1, u:1, v:4, w:4, x:8, y:4, z:10
 };
 
-self.onmessage = async function(e) {
+self.onmessage = async (e) => {
     const { type, payload, id } = e.data;
 
     if (type === 'init') {
-        await loadDictionary(payload.url);
-        self.postMessage({ type: 'ready' });
-    } 
-    else if (!isReady) {
-        self.postMessage({ type: 'error', message: 'Dictionary loading...' });
-    }
-    else {
-        // Route to specific logic
-        let results = [];
-        const startTime = performance.now();
-
-        switch (type) {
-            case 'unscramble': results = handleUnscramble(payload); break;
-            case 'pattern': results = handlePattern(payload); break;
-            case 'wordle': results = handleWordle(payload); break;
-            case 'spellingbee': results = handleSpellingBee(payload); break;
+        try {
+            const res = await fetch(payload.url);
+            const text = await res.text();
+            dictionary = text.split(/\r?\n/).filter(w => w.length > 1);
+            isReady = true;
+            self.postMessage({ type: 'ready' });
+        } catch(err) {
+            self.postMessage({ type: 'error', message: 'Failed to load words' });
         }
-
-        const endTime = performance.now();
-        self.postMessage({ 
-            type: 'result', 
-            id: id,
-            data: results, 
-            time: (endTime - startTime).toFixed(2) 
-        });
+        return;
     }
+
+    if (!isReady) return;
+
+    let results = [];
+    const start = performance.now();
+
+    // -- LOGIC ROUTER --
+    if (type === 'unscramble') results = doUnscramble(payload);
+    else if (type === 'spellingbee') results = doSpellingBee(payload);
+    else if (type === 'wordle') results = doWordle(payload);
+    else if (type === 'pattern') results = doPattern(payload);
+
+    const time = (performance.now() - start).toFixed(2);
+    self.postMessage({ type: 'result', id, data: results, time });
 };
 
-async function loadDictionary(url) {
-    try {
-        const res = await fetch(url);
-        const text = await res.text();
-        // Split and filter empty/short strings
-        dictionary = text.split(/\r?\n/).filter(w => w.length > 1);
-        dictionarySet = new Set(dictionary);
-        isReady = true;
-    } catch (err) {
-        console.error("Worker Dictionary Load Fail", err);
-    }
-}
+// --- CORE ALGORITHMS ---
 
 function getScore(word) {
-    return word.split('').reduce((acc, c) => acc + (SCORES[c] || 0), 0);
+    return word.split('').reduce((a,c) => a + (POINTS[c] || 0), 0);
 }
 
-// --- ALGORITHMS ---
-
-// 1. Unscrambler (Frequency Map Approach for High Performance)
-function handleUnscramble({ letters, starts, ends, sort }) {
+function doUnscramble({ letters, start, end, sort }) {
     const input = letters.toLowerCase();
-    const mustStart = starts ? starts.toLowerCase() : '';
-    const mustEnd = ends ? ends.toLowerCase() : '';
-    
-    // Frequency map of input
-    const inputFreq = {};
+    const map = {};
     let wildcards = 0;
-    for (let char of input) {
-        if (char === '?') wildcards++;
-        else inputFreq[char] = (inputFreq[char] || 0) + 1;
+    
+    for (let c of input) {
+        if(c === '?') wildcards++;
+        else map[c] = (map[c] || 0) + 1;
     }
 
-    const results = [];
-
-    // Single pass through dictionary (O(N) where N = 370k)
-    // Much faster than generating permutations for 15 letters
-    for (let i = 0; i < dictionary.length; i++) {
-        const word = dictionary[i];
-        
-        // Basic Length Filters
-        if (word.length > input.length) continue;
-        if (mustStart && !word.startsWith(mustStart)) continue;
-        if (mustEnd && !word.endsWith(mustEnd)) continue;
-
-        // Check if word can be formed
-        let tempWildcards = wildcards;
-        let possible = true;
-        
-        // Optimization: creating freq map for every word is slow. 
-        // We iterate the word chars and subtract from input freq.
-        const currentFreq = { ...inputFreq }; // Shallow copy is ok for flat obj
-
-        for (let char of word) {
-            if (currentFreq[char] > 0) {
-                currentFreq[char]--;
-            } else if (tempWildcards > 0) {
-                tempWildcards--;
-            } else {
-                possible = false;
-                break;
-            }
-        }
-
-        if (possible) {
-            results.push({ word, score: getScore(word) });
-        }
-    }
-
-    // Sort
-    return sortResults(results, sort);
-}
-
-// 2. Pattern Matcher (Regex)
-function handlePattern({ pattern }) {
-    // Convert "c_t" to /^c.t$/
-    const regexStr = '^' + pattern.toLowerCase().replace(/_/g, '.') + '$';
-    const regex = new RegExp(regexStr);
-    
-    return dictionary
-        .filter(w => regex.test(w))
-        .map(w => ({ word: w, score: getScore(w) }));
-}
-
-// 3. Wordle Solver
-function handleWordle({ correct, present, absent }) {
-    // correct: ".a..e" (5 chars)
-    // present: "r,s"
-    // absent: "m,o"
-    
-    const badChars = new Set(absent.split(',').filter(c=>c).map(c=>c.trim()));
-    const mustHave = present.split(',').filter(c=>c).map(c=>c.trim());
-    
     return dictionary.filter(word => {
-        if (word.length !== 5) return false;
+        if (word.length > input.length) return false;
+        if (start && !word.startsWith(start.toLowerCase())) return false;
+        if (end && !word.endsWith(end.toLowerCase())) return false;
 
-        // 1. Check Gray letters (Absent)
+        let tempMap = {...map};
+        let tempWild = wildcards;
+        
         for (let char of word) {
-            if (badChars.has(char)) return false;
+            if (tempMap[char] > 0) tempMap[char]--;
+            else if (tempWild > 0) tempWild--;
+            else return false;
         }
+        return true;
+    }).map(w => ({ word: w, score: getScore(w) }))
+      .sort((a,b) => sort === 'length' ? b.word.length - a.word.length : b.score - a.score);
+}
 
-        // 2. Check Yellow letters (Present somewhere)
-        for (let char of mustHave) {
-            if (!word.includes(char)) return false;
+function doSpellingBee({ center, outer }) {
+    if (!center) return [];
+    const main = center.toLowerCase();
+    const allowed = new Set((center + outer).toLowerCase().split(''));
+
+    return dictionary.filter(w => {
+        if (w.length < 4) return false;      // Min length 4
+        if (!w.includes(main)) return false; // Must have center
+        for (let c of w) {
+            if (!allowed.has(c)) return false; // Only allowed chars
         }
+        return true;
+    }).map(w => ({ word: w, score: w.length === 4 ? 1 : w.length }));
+}
 
-        // 3. Check Green letters (Correct position)
-        if (correct) {
-            for (let i = 0; i < 5; i++) {
-                if (correct[i] !== '.' && correct[i] !== word[i]) return false;
-            }
+function doWordle({ green, yellow, gray }) {
+    // green: ['.', 'a', '.', '.', 'e']
+    // yellow: 'r,s'
+    // gray: 'm,o'
+    
+    const bad = new Set(gray.split(/[ ,]+/).filter(Boolean));
+    const must = yellow.split(/[ ,]+/).filter(Boolean);
+
+    return dictionary.filter(w => {
+        if (w.length !== 5) return false;
+
+        // 1. Check Bad
+        for (let c of w) {
+            if (bad.has(c)) return false;
         }
-
+        // 2. Check Must Haves
+        for (let c of must) {
+            if (!w.includes(c)) return false;
+        }
+        // 3. Check Positions (Green)
+        for (let i=0; i<5; i++) {
+            if (green[i] && green[i] !== '' && green[i] !== w[i]) return false;
+        }
         return true;
     }).map(w => ({ word: w, score: getScore(w) }));
 }
 
-// 4. Spelling Bee
-function handleSpellingBee({ center, outer }) {
-    if (!center) return [];
-    const centerChar = center.toLowerCase();
-    const validChars = new Set((center + outer).toLowerCase().split(''));
-
-    return dictionary.filter(word => {
-        if (word.length < 4) return false;
-        if (!word.includes(centerChar)) return false;
-        
-        // Check if all letters are in the valid set
-        for (let char of word) {
-            if (!validChars.has(char)) return false;
-        }
-        return true;
-    }).map(w => ({ word: w, score: word.length === 4 ? 1 : word.length }));
-}
-
-// Helper: Sorter
-function sortResults(items, mode) {
-    if (mode === 'score') return items.sort((a,b) => b.score - a.score);
-    if (mode === 'alpha') return items.sort((a,b) => a.word.localeCompare(b.word));
-    return items.sort((a,b) => b.word.length - a.word.length || a.word.localeCompare(b.word)); // Default length
+function doPattern({ pattern }) {
+    // pattern: "c_m_u_e"
+    const reg = new RegExp('^' + pattern.replace(/[_.]/g, '.') + '$', 'i');
+    return dictionary
+        .filter(w => reg.test(w))
+        .map(w => ({ word: w, score: getScore(w) }));
 }
