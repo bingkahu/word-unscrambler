@@ -1,235 +1,226 @@
-/* Lexicon Ultra - Main Controller
- * Handles UI interactions and Worker communication
- */
+/* Lexicon Titan - Application Controller */
 
 class App {
     constructor() {
         this.worker = new Worker('worker.js');
-        this.savedWords = new Set(JSON.parse(localStorage.getItem('lexicon_saved') || '[]'));
-        
-        // Config
         this.DICT_URL = 'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt';
+        this.saved = new Set(JSON.parse(localStorage.getItem('lexicon_saved') || '[]'));
         
-        this.dom = {
-            navBtns: document.querySelectorAll('.nav-btn'),
-            views: document.querySelectorAll('.view'),
-            inputs: {
-                unscramble: document.getElementById('input-letters'),
-                starts: document.getElementById('filter-starts'),
-                ends: document.getElementById('filter-ends'),
-                sort: document.getElementById('sort-order'),
-                pattern: document.getElementById('input-pattern'),
-                // Wordle
-                wCorrect: document.getElementById('w-correct'),
-                wPresent: document.getElementById('w-present'),
-                wAbsent: document.getElementById('w-absent'),
-                // Bee
-                sbCenter: document.getElementById('sb-center'),
-                sbOuter: document.getElementById('sb-outer')
-            },
-            containers: {
-                unscramble: document.getElementById('results-container'),
-                pattern: document.getElementById('pattern-results'),
-                wordle: document.getElementById('wordle-results'),
-                bee: document.getElementById('bee-results'),
-                saved: document.getElementById('saved-list')
-            },
-            status: document.getElementById('status-indicator'),
-            themeToggle: document.getElementById('theme-toggle')
+        this.els = {
+            navItems: document.querySelectorAll('.nav-item'),
+            views: document.querySelectorAll('.page-view'),
+            title: document.getElementById('page-title'),
+            status: document.getElementById('status-dot'),
+            statusText: document.getElementById('status-text'),
+            themeBtn: document.getElementById('theme-btn'),
+            
+            // Modal
+            modal: document.getElementById('modal-overlay'),
+            modalTitle: document.getElementById('def-title'),
+            modalBody: document.getElementById('def-body'),
         };
 
         this.init();
     }
 
     init() {
-        this.setupWorker();
-        this.setupNavigation();
-        this.setupEventListeners();
+        // Init Worker
+        this.worker.postMessage({ type: 'init', payload: { url: this.DICT_URL } });
+        this.worker.onmessage = this.handleWorkerMsg.bind(this);
+
+        // Navigation
+        this.els.navItems.forEach(btn => {
+            btn.addEventListener('click', () => this.navigate(btn));
+        });
+
+        // Theme
         this.setupTheme();
+
+        // Bind Tools
+        this.bindEvents();
+        
+        // Load Saved
         this.renderSaved();
     }
 
-    setupWorker() {
-        this.worker.postMessage({ type: 'init', payload: { url: this.DICT_URL } });
+    navigate(btn) {
+        // Update Active Nav
+        this.els.navItems.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
 
-        this.worker.onmessage = (e) => {
-            const { type, data, time, message } = e.data;
-            
-            if (type === 'ready') {
-                this.dom.status.classList.remove('loading');
-                this.dom.status.classList.add('ready');
-                this.toast('System Ready', 'Dictionary loaded successfully.');
-            } else if (type === 'result') {
-                this.handleResults(data, time, e.data.id);
-            } else if (type === 'error') {
-                console.log(message);
-            }
-        };
+        // Update View
+        const viewId = btn.dataset.view;
+        this.els.views.forEach(v => v.classList.remove('active'));
+        document.getElementById(`view-${viewId}`).classList.add('active');
+
+        // Update Title
+        this.els.title.textContent = btn.innerText.trim();
     }
 
-    setupNavigation() {
-        this.dom.navBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Update Sidebar
-                this.dom.navBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // Show View
-                const target = btn.dataset.target;
-                this.dom.views.forEach(v => v.classList.remove('active'));
-                document.getElementById(`view-${target}`).classList.add('active');
-            });
-        });
-    }
-
-    setupEventListeners() {
-        // Unscramble Trigger
-        const runUnscramble = () => {
-            const letters = this.dom.inputs.unscramble.value;
-            if(!letters) return;
+    bindEvents() {
+        // Unscramble
+        document.getElementById('btn-unscramble').onclick = () => {
             this.sendJob('unscramble', {
-                letters,
-                starts: this.dom.inputs.starts.value,
-                ends: this.dom.inputs.ends.value,
-                sort: this.dom.inputs.sort.value
-            }, 'unscramble');
+                letters: document.getElementById('inp-letters').value,
+                start: document.getElementById('filter-start').value,
+                end: document.getElementById('filter-end').value,
+                sort: document.getElementById('sort-mode').value
+            }, 'res-unscramble');
         };
 
-        document.getElementById('btn-solve').onclick = runUnscramble;
-        this.dom.inputs.sort.onchange = runUnscramble;
-        this.dom.inputs.unscramble.addEventListener('keypress', e => e.key === 'Enter' && runUnscramble());
-
-        // Pattern Trigger
-        document.getElementById('btn-pattern').onclick = () => {
-            this.sendJob('pattern', { pattern: this.dom.inputs.pattern.value }, 'pattern');
-        };
-
-        // Wordle Trigger
-        document.getElementById('btn-wordle').onclick = () => {
-            this.sendJob('wordle', {
-                correct: this.dom.inputs.wCorrect.value,
-                present: this.dom.inputs.wPresent.value,
-                absent: this.dom.inputs.wAbsent.value
-            }, 'wordle');
-        };
-
-        // Spelling Bee Trigger
+        // Spelling Bee
         document.getElementById('btn-bee').onclick = () => {
-            this.sendJob('spellingbee', {
-                center: this.dom.inputs.sbCenter.value,
-                outer: this.dom.inputs.sbOuter.value
-            }, 'bee');
+            const center = document.getElementById('sb-center-input').value;
+            const outerInputs = document.querySelectorAll('.hex-input:not(.center)');
+            let outer = '';
+            outerInputs.forEach(i => outer += i.value);
+            
+            this.sendJob('spellingbee', { center, outer }, 'res-bee');
         };
 
-        // Saved Words Clear
+        // Wordle
+        document.getElementById('btn-wordle').onclick = () => {
+            const greens = Array.from(document.querySelectorAll('.w-green')).map(i => i.value.toLowerCase());
+            this.sendJob('wordle', {
+                green: greens,
+                yellow: document.getElementById('w-yellow').value,
+                gray: document.getElementById('w-gray').value
+            }, 'res-wordle');
+        };
+
+        // Pattern
+        document.getElementById('btn-pattern').onclick = () => {
+            this.sendJob('pattern', { pattern: document.getElementById('inp-pattern').value }, 'res-pattern');
+        };
+
+        // API Tools (Rhyme/Synonym) - No Worker Needed
+        document.getElementById('btn-rhyme').onclick = () => this.fetchDatamuse('rel_rhy', 'inp-rhyme', 'res-rhyme');
+        document.getElementById('btn-syn').onclick = () => this.fetchDatamuse('rel_syn', 'inp-syn', 'res-syn');
+
+        // Modal Close
+        document.querySelector('.close-modal').onclick = () => this.els.modal.classList.remove('open');
         document.getElementById('btn-clear-saved').onclick = () => {
-            this.savedWords.clear();
-            this.saveStorage();
+            this.saved.clear();
+            this.saveDisk();
             this.renderSaved();
         };
-
-        // Anagram Check
-        document.getElementById('btn-anag-check').onclick = () => {
-             const s = document.getElementById('anag-source').value;
-             const t = document.getElementById('anag-target').value;
-             const clean = str => str.toLowerCase().replace(/[^a-z]/g, '').split('').sort().join('');
-             const match = clean(s) === clean(t) && s && t;
-             document.getElementById('anag-status').innerHTML = match 
-                ? `<span style="color:var(--accent)">MATCH! Exact anagrams.</span>`
-                : `<span style="color:red">Mismatch.</span>`;
-        };
     }
 
-    sendJob(type, payload, uiId) {
-        if (!this.dom.status.classList.contains('ready')) {
-            this.toast('Wait', 'Dictionary is still loading...');
+    // --- WORKER HANDLERS ---
+    sendJob(type, payload, resId) {
+        if(this.els.status.classList.contains('loading')) {
+            alert("Dictionary loading... please wait 2 seconds.");
             return;
         }
-        // Show loading state in UI if needed
-        this.dom.containers[uiId].style.opacity = '0.5';
-        this.worker.postMessage({ type, payload, id: uiId });
+        const container = document.getElementById(resId);
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;">Computing...</div>';
+        this.worker.postMessage({ type, payload, id: resId });
     }
 
-    handleResults(data, time, uiId) {
-        const container = this.dom.containers[uiId];
-        container.style.opacity = '1';
+    handleWorkerMsg(e) {
+        const { type, data, id } = e.data;
+        if (type === 'ready') {
+            this.els.status.className = 'status-indicator ready';
+            this.els.statusText.textContent = 'Ready';
+        } else if (type === 'result') {
+            this.renderResults(data, id);
+        }
+    }
+
+    // --- API HANDLERS (Datamuse) ---
+    async fetchDatamuse(relType, inpId, resId) {
+        const word = document.getElementById(inpId).value;
+        const container = document.getElementById(resId);
+        container.innerHTML = 'Loading...';
+
+        try {
+            const res = await fetch(`https://api.datamuse.com/words?${relType}=${word}`);
+            const data = await res.json();
+            this.renderResults(data, resId);
+        } catch(e) {
+            container.innerHTML = 'Error fetching data.';
+        }
+    }
+
+    // --- RENDERING ---
+    renderResults(items, containerId) {
+        const container = document.getElementById(containerId);
         container.innerHTML = '';
         
-        if (uiId === 'unscramble') {
-            document.getElementById('results-count').textContent = `${data.length} results in ${time}ms`;
-        }
-
-        if (data.length === 0) {
-            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#888">No matches found.</div>';
+        if (!items || items.length === 0) {
+            container.innerHTML = '<div style="opacity:0.5; padding:20px;">No matches found.</div>';
             return;
         }
 
-        // Render Cards
-        const fragment = document.createDocumentFragment();
-        // Limit render to 500 items for DOM performance
-        data.slice(0, 500).forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'word-card';
-            div.innerHTML = `<span class="word">${item.word}</span> <span class="score ${item.score > 15 ? 'high' : ''}">${item.score}</span>`;
+        const frag = document.createDocumentFragment();
+        // Limit to 200 for perf
+        items.slice(0, 200).forEach(item => {
+            const w = item.word;
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            card.innerHTML = `<div style="font-weight:bold;font-size:1.1em">${w}</div>`;
             
-            // Interaction: Toggle Save
-            div.onclick = () => this.toggleSave(item.word);
+            if(item.score) card.innerHTML += `<div class="score">${item.score}</div>`;
             
-            fragment.appendChild(div);
+            card.onclick = () => this.openDefinition(w);
+            frag.appendChild(card);
         });
-
-        container.appendChild(fragment);
+        container.appendChild(frag);
     }
 
-    // --- UTILS ---
+    // --- MODAL & SAVING ---
+    async openDefinition(word) {
+        this.els.modal.classList.add('open');
+        this.els.modalTitle.textContent = word;
+        this.els.modalBody.innerHTML = 'Fetching definition...';
+        
+        document.getElementById('btn-modal-save').onclick = () => this.toggleSave(word);
+        document.getElementById('btn-modal-google').href = `https://google.com/search?q=define+${word}`;
+
+        try {
+            const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+            if(!res.ok) throw new Error();
+            const data = await res.json();
+            
+            let html = '';
+            data[0].meanings.slice(0,2).forEach(m => {
+                html += `<div style="margin-bottom:10px;">
+                    <i style="color:var(--primary)">${m.partOfSpeech}</i>
+                    <p>${m.definitions[0].definition}</p>
+                </div>`;
+            });
+            this.els.modalBody.innerHTML = html;
+        } catch(e) {
+            this.els.modalBody.innerHTML = "Definition not found in API.";
+        }
+    }
 
     toggleSave(word) {
-        if (this.savedWords.has(word)) {
-            this.savedWords.delete(word);
-            this.toast('Removed', `${word} removed from saved.`);
-        } else {
-            this.savedWords.add(word);
-            this.toast('Saved', `${word} added to library.`);
-        }
-        this.saveStorage();
+        if(this.saved.has(word)) this.saved.delete(word);
+        else this.saved.add(word);
+        this.saveDisk();
         this.renderSaved();
+        this.els.modal.classList.remove('open');
     }
 
     renderSaved() {
-        const list = this.dom.containers.saved;
-        list.innerHTML = '';
-        this.savedWords.forEach(word => {
-            const li = document.createElement('li');
-            li.textContent = word;
-            li.className = 'word-card'; // Reuse style
-            li.style.display = 'inline-block';
-            li.style.margin = '5px';
-            list.appendChild(li);
-        });
+        const list = Array.from(this.saved).map(w => ({ word: w }));
+        this.renderResults(list, 'res-saved');
     }
 
-    saveStorage() {
-        localStorage.setItem('lexicon_saved', JSON.stringify([...this.savedWords]));
+    saveDisk() {
+        localStorage.setItem('lexicon_saved', JSON.stringify([...this.saved]));
     }
 
     setupTheme() {
         const saved = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', saved);
-        this.dom.themeToggle.onclick = () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
+        this.els.themeBtn.onclick = () => {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
         };
-    }
-
-    toast(title, msg) {
-        const container = document.getElementById('toast-container');
-        const el = document.createElement('div');
-        el.className = 'toast';
-        el.innerHTML = `<strong>${title}</strong><br>${msg}`;
-        container.appendChild(el);
-        setTimeout(() => el.remove(), 3000);
     }
 }
 
