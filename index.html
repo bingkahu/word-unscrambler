@@ -3,50 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Word Unscrambler</title>
+    <title>Lexicon Pro - Word Tools</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <main class="app-container">
-        <header>
-            <h1>Word<span>Finder</span></h1>
-            <p>Enter up to 7 letters to find all valid dictionary words.</p>
-        </header>
-
-        <div id="status-bar" class="status-bar">
-            <span class="loader"></span> Loading dictionary...
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fa-solid fa-layer-group"></i> Lexicon<span>Pro</span>
         </div>
+        <ul class="nav-links">
+            <li><a href="#unscramble" class="active" data-page="unscramble">Unscramble</a></li>
+            <li><a href="#anagrams" data-page="anagrams">Anagrams</a></li>
+            <li><button id="theme-toggle"><i class="fa-solid fa-moon"></i></button></li>
+        </ul>
+    </nav>
 
-        <section class="controls">
-            <div class="input-wrapper">
-                <input type="text" 
-                       id="user-input" 
-                       placeholder="e.g. 'coding'" 
-                       maxlength="7" 
-                       autocomplete="off">
+    <div id="global-status" class="status-bar">
+        <div class="loader"></div> Initializing Dictionary...
+    </div>
+
+    <main class="app-content">
+
+        <section id="page-unscramble" class="page active">
+            <header class="page-header">
+                <h2>Word Unscrambler</h2>
+                <p>Enter letters to find words. Use <strong>?</strong> for wildcards (e.g. 'c?t').</p>
+            </header>
+            
+            <div class="control-panel">
+                <input type="text" id="unscramble-input" placeholder="Enter letters (e.g. 'coding?')" maxlength="9">
+                <button id="unscramble-btn" class="btn-primary">Find Words</button>
             </div>
-            <button id="solve-btn" disabled>Unscramble</button>
-        </section>
 
-        <div id="error-msg" class="error-msg"></div>
-
-        <section class="results-area">
-            <div class="stats-row">
-                <span id="result-count">0 words found</span>
-                <div class="sort-controls">
-                    <label>Sort by:</label>
+            <div class="filters">
+                <label>Sort by: 
                     <select id="sort-select">
                         <option value="length">Length</option>
                         <option value="alpha">A-Z</option>
                     </select>
+                </label>
+                <span id="results-meta">Waiting for input...</span>
+            </div>
+
+            <div id="unscramble-results" class="results-grid"></div>
+        </section>
+
+        <section id="page-anagrams" class="page">
+            <header class="page-header">
+                <h2>Anagram Checker</h2>
+                <p>Check if two phrases are exact anagrams of each other.</p>
+            </header>
+
+            <div class="anagram-box">
+                <div class="input-group">
+                    <label>Phrase 1</label>
+                    <input type="text" id="anagram-1" placeholder="e.g. Listen">
+                </div>
+                <div class="icon-divider"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                <div class="input-group">
+                    <label>Phrase 2</label>
+                    <input type="text" id="anagram-2" placeholder="e.g. Silent">
                 </div>
             </div>
-            <ul id="results-list" class="results-grid"></ul>
+            
+            <button id="check-anagram-btn" class="btn-primary full-width">Check Match</button>
+            
+            <div id="anagram-result-display" class="result-banner"></div>
         </section>
+
+        <div id="definition-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3 id="def-word">Word</h3>
+                <div id="def-content">Loading definition...</div>
+            </div>
+        </div>
+
     </main>
 
     <script type="module" src="app.js"></script>
-
 </body>
 </html>
