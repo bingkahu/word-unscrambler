@@ -1,0 +1,9 @@
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+# Cache the dictionary file for a long time since it rarely changes
+/words_alpha.txt
+  Cache-Control: public, max-age=31536000, immutable
