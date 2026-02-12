@@ -1,12 +1,13 @@
 let dictionary = [];
 
 self.onmessage = async (e) => {
-    const { type, payload, id } = e.data;
+    const { type, url, payload, containerId } = e.data;
 
     if (type === 'init') {
-        const res = await fetch(payload.url);
-        const text = await res.text();
-        dictionary = text.split(/\r?\n/).filter(w => w.length > 2);
+        const response = await fetch(url);
+        const text = await response.text();
+        // Load words and filter out short junk
+        dictionary = text.split(/\r?\n/).filter(w => w.length >= 3);
         self.postMessage({ type: 'ready' });
         return;
     }
@@ -14,21 +15,21 @@ self.onmessage = async (e) => {
     let results = [];
 
     if (type === 'unscramble') {
-        const input = payload.letters.toLowerCase();
+        const target = payload.letters;
         results = dictionary.filter(word => {
-            if (word.length > input.length) return false;
-            let temp = input;
+            if (word.length > target.length) return false;
+            let hand = target;
             for (let char of word) {
-                if (temp.includes(char)) temp = temp.replace(char, '');
+                if (hand.includes(char)) hand = hand.replace(char, '');
                 else return false;
             }
             return true;
         }).sort((a,b) => b.length - a.length);
     }
 
-    if (type === 'spellingbee') {
-        const center = payload.center.toLowerCase();
-        const allowed = (payload.center + payload.outer).toLowerCase();
+    if (type === 'bee') {
+        const center = payload.center;
+        const allowed = center + payload.outer;
         results = dictionary.filter(w => {
             if (w.length < 4 || !w.includes(center)) return false;
             for (let char of w) if (!allowed.includes(char)) return false;
@@ -38,21 +39,22 @@ self.onmessage = async (e) => {
 
     if (type === 'wordle') {
         const { green, yellow, gray } = payload;
+        const pattern = new RegExp(`^${green.replace(/\./g, '.')}$`);
+        
         results = dictionary.filter(w => {
             if (w.length !== 5) return false;
             // Gray check
-            for (let c of gray) if (w.includes(c)) return false;
+            for (let char of gray) if (w.includes(char)) return false;
             // Yellow check
-            for (let c of yellow) if (!w.includes(c)) return false;
-            // Green check (regex)
-            const pattern = new RegExp(`^${green.replace(/\./g, '.')}$`);
+            for (let char of yellow) if (!w.includes(char)) return false;
+            // Green pattern check
             return pattern.test(w);
         });
     }
 
     self.postMessage({ 
-        type: 'result', 
-        id, 
-        data: results.map(w => ({ word: w })) 
+        type: 'results', 
+        containerId, 
+        words: results.map(w => ({ word: w })) 
     });
 };
