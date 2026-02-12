@@ -3,82 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lexicon Titan - Word Intelligence</title>
+    <title>Lexicon Titan - Beta</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><polygon points=%2250,5 95,25 95,75 50,95 5,75 5,25%22 fill=%22%234f46e5%22/><text y=%22.65em%22 x=%2250%22 font-family=%22Arial%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22 font-weight=%22bold%22>T</text></svg>">
 </head>
 <body>
+
+    <div id="beta-lock" class="modal-overlay hidden">
+        <div class="glass-panel lock-card">
+            <i class="fa-solid fa-bolt-lightning lock-icon"></i>
+            <h2>Titan Pro Required</h2>
+            <p>Advanced features and searches over 5 letters are reserved for Beta Testers.</p>
+            <input type="password" id="beta-code-input" placeholder="Enter Access Code">
+            <button id="btn-unlock" class="primary-btn full">Unlock Full Suite</button>
+            <button id="btn-close-lock" class="text-btn">Continue with Limited Demo</button>
+        </div>
+    </div>
 
     <div class="app-container">
         <aside class="sidebar">
             <div class="logo-area">
-                <i class="fa-solid fa-cube fa-spin-pulse" style="--fa-animation-duration: 3s;"></i>
+                <i class="fa-solid fa-cube fa-spin-pulse"></i>
                 <span>Lexicon</span>
             </div>
             
             <nav class="nav-menu">
-                <p class="nav-label">Tools</p>
+                <p class="nav-label">Core Tools</p>
                 <button class="nav-item active" data-view="unscramble">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Unscrambler
                 </button>
-                <button class="nav-item" data-view="spellingbee">
-                    <i class="fa-brands fa-hive"></i> Spelling Bee
+                <button class="nav-item locked" data-view="spellingbee">
+                    <i class="fa-brands fa-hive"></i> Spelling Bee <i class="fa-solid fa-lock mini-lock"></i>
                 </button>
-                <button class="nav-item" data-view="wordle">
-                    <i class="fa-solid fa-table-cells"></i> Wordle Solver
+                <button class="nav-item locked" data-view="wordle">
+                    <i class="fa-solid fa-table-cells"></i> Wordle Solver <i class="fa-solid fa-lock mini-lock"></i>
                 </button>
-                <button class="nav-item" data-view="pattern">
-                    <i class="fa-solid fa-magnifying-glass-chart"></i> Crossword
-                </button>
-                
                 <p class="nav-label">Linguistics</p>
-                <button class="nav-item" data-view="rhymes">
-                    <i class="fa-solid fa-music"></i> Rhyme Finder
-                </button>
-                <button class="nav-item" data-view="synonyms">
-                    <i class="fa-solid fa-book-open"></i> Synonyms
-                </button>
-
-                <p class="nav-label">Library</p>
-                <button class="nav-item" data-view="saved">
-                    <i class="fa-solid fa-bookmark"></i> Saved Words
+                <button class="nav-item locked" data-view="rhymes">
+                    <i class="fa-solid fa-music"></i> Rhyme Finder <i class="fa-solid fa-lock mini-lock"></i>
                 </button>
             </nav>
 
             <div class="sidebar-footer">
-                <div id="status-dot" class="status-indicator loading" title="Dictionary Status"></div>
-                <span id="status-text">Loading...</span>
+                <div id="status-dot" class="status-indicator loading"></div>
+                <span id="status-text">Syncing Dictionary...</span>
             </div>
         </aside>
 
         <main class="main-content">
             <header class="top-bar">
                 <h2 id="page-title">Unscrambler</h2>
-                <div class="top-actions">
-                    <button id="theme-btn" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
-                    <a href="https://github.com/bingkahu" target="_blank" class="profile-link">
-                        <img src="https://ui-avatars.com/api/?name=Bing+Kahu&background=6366f1&color=fff" alt="Profile">
-                    </a>
-                </div>
+                <div id="badge-demo" class="demo-badge">Demo Mode</div>
             </header>
 
             <section id="view-unscramble" class="page-view active">
-                <div class="glass-panel input-panel">
+                <div class="glass-panel">
                     <div class="input-group-lg">
-                        <input type="text" id="inp-letters" placeholder="Enter your tiles (e.g. 'coding?')" autocomplete="off">
+                        <input type="text" id="inp-letters" placeholder="Enter tiles (e.g. 'coding?')" autocomplete="off">
                         <button id="btn-unscramble" class="primary-btn">Solve</button>
-                    </div>
-                    <div class="filters">
-                        <div class="filter-group">
-                            <i class="fa-solid fa-filter"></i>
-                            <input type="text" id="filter-start" placeholder="Starts with">
-                            <input type="text" id="filter-end" placeholder="Ends with">
-                            <select id="sort-mode">
-                                <option value="length">Longest First</option>
-                                <option value="score">High Score</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
                 <div id="res-unscramble" class="results-grid"></div>
@@ -101,91 +85,31 @@
                             <input type="text" class="hex-input" maxlength="1" data-idx="5">
                         </div>
                     </div>
-                    <div class="hive-controls">
-                        <h3>Hive Mind</h3>
-                        <p>Enter the center letter in the yellow hex. Enter outer letters around it.</p>
-                        <button id="btn-bee" class="primary-btn full">Crack the Hive</button>
-                    </div>
+                    <button id="btn-bee" class="primary-btn full">Crack Hive</button>
                 </div>
-                <div id="res-bee" class="results-list"></div>
+                <div id="res-bee" class="results-grid"></div>
             </section>
 
             <section id="view-wordle" class="page-view">
                 <div class="glass-panel">
-                    <div class="wordle-row green">
-                        <label>Correct (Green)</label>
-                        <div class="pin-inputs">
-                            <input type="text" maxlength="1" class="w-green" data-idx="0">
-                            <input type="text" maxlength="1" class="w-green" data-idx="1">
-                            <input type="text" maxlength="1" class="w-green" data-idx="2">
-                            <input type="text" maxlength="1" class="w-green" data-idx="3">
-                            <input type="text" maxlength="1" class="w-green" data-idx="4">
-                        </div>
-                    </div>
-                    <div class="wordle-row yellow">
-                        <label>Present (Yellow)</label>
-                        <input type="text" id="w-yellow" placeholder="Letters found but wrong spot (e.g. 'a,r')">
-                    </div>
-                    <div class="wordle-row gray">
-                        <label>Absent (Gray)</label>
-                        <input type="text" id="w-gray" placeholder="Letters not in word">
-                    </div>
-                    <button id="btn-wordle" class="primary-btn full" style="margin-top:1rem;">Predict Answers</button>
+                    <div class="wordle-row"><label>Green</label><input type="text" id="w-green" placeholder="e.g. .a.e."></div>
+                    <div class="wordle-row"><label>Yellow</label><input type="text" id="w-yellow" placeholder="letters present"></div>
+                    <div class="wordle-row"><label>Gray</label><input type="text" id="w-gray" placeholder="letters excluded"></div>
+                    <button id="btn-wordle" class="primary-btn full">Filter Results</button>
                 </div>
-                <div id="res-wordle" class="results-chips"></div>
-            </section>
-
-            <section id="view-pattern" class="page-view">
-                <div class="glass-panel">
-                    <p>Use <code>_</code> or <code>.</code> for missing letters.</p>
-                    <div class="input-group-lg">
-                        <input type="text" id="inp-pattern" placeholder="e.g. C_M_U_E_">
-                        <button id="btn-pattern" class="primary-btn">Match</button>
-                    </div>
-                </div>
-                <div id="res-pattern" class="results-list"></div>
+                <div id="res-wordle" class="results-grid"></div>
             </section>
 
             <section id="view-rhymes" class="page-view">
                 <div class="glass-panel">
                     <div class="input-group-lg">
                         <input type="text" id="inp-rhyme" placeholder="Word to rhyme with...">
-                        <button id="btn-rhyme" class="primary-btn">Find Rhymes</button>
+                        <button id="btn-rhyme" class="primary-btn">Find</button>
                     </div>
                 </div>
-                <div id="res-rhyme" class="results-list"></div>
-            </section>
-
-            <section id="view-synonyms" class="page-view">
-                 <div class="glass-panel">
-                    <div class="input-group-lg">
-                        <input type="text" id="inp-syn" placeholder="Find synonyms for...">
-                        <button id="btn-syn" class="primary-btn">Search</button>
-                    </div>
-                </div>
-                <div id="res-syn" class="results-list"></div>
-            </section>
-
-            <section id="view-saved" class="page-view">
-                <div class="glass-panel header-flex">
-                    <h3>Your Collection</h3>
-                    <button id="btn-clear-saved" class="text-danger">Clear All</button>
-                </div>
-                <div id="res-saved" class="results-grid"></div>
+                <div id="res-rhyme" class="results-grid"></div>
             </section>
         </main>
-    </div>
-
-    <div id="modal-overlay" class="modal-overlay">
-        <div class="modal-card">
-            <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
-            <h2 id="def-title">Word</h2>
-            <div id="def-body">Loading...</div>
-            <div class="modal-actions">
-                <button id="btn-modal-save" class="secondary-btn"><i class="fa-solid fa-bookmark"></i> Save</button>
-                <a id="btn-modal-google" href="#" target="_blank" class="secondary-btn"><i class="fa-brands fa-google"></i> Web</a>
-            </div>
-        </div>
     </div>
 
     <script type="module" src="app.js"></script>
