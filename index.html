@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Word Unscrambler</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="app-container">
+        <header>
+            <h1>Word<span>Finder</span></h1>
+            <p>Enter up to 7 letters to find all valid dictionary words.</p>
+        </header>
+
+        <div id="status-bar" class="status-bar">
+            <span class="loader"></span> Loading dictionary...
+        </div>
+
+        <section class="controls">
+            <div class="input-wrapper">
+                <input type="text" 
+                       id="user-input" 
+                       placeholder="e.g. 'coding'" 
+                       maxlength="7" 
+                       autocomplete="off">
+            </div>
+            <button id="solve-btn" disabled>Unscramble</button>
+        </section>
+
+        <div id="error-msg" class="error-msg"></div>
+
+        <section class="results-area">
+            <div class="stats-row">
+                <span id="result-count">0 words found</span>
+                <div class="sort-controls">
+                    <label>Sort by:</label>
+                    <select id="sort-select">
+                        <option value="length">Length</option>
+                        <option value="alpha">A-Z</option>
+                    </select>
+                </div>
+            </div>
+            <ul id="results-list" class="results-grid"></ul>
+        </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>
