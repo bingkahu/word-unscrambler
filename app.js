@@ -1,39 +1,42 @@
-class TitanApp {
+class LexiconTitan {
     constructor() {
         this.worker = new Worker('worker.js');
-        this.unlocked = localStorage.getItem('titan_v1_auth') === 'true';
-        this.SECRET_HASH = 'VElUQU4yMDI2'; // Base64 for TITAN2026
+        this.isUnlocked = localStorage.getItem('titan_auth') === 'true';
+        this.SECRET = 'VElUQU4yMDI2'; // TITAN2026
         
         this.init();
     }
 
     init() {
-        this.worker.postMessage({ type: 'init', payload: { url: 'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt' } });
-        
+        // Initialize Worker Dictionary
+        this.worker.postMessage({ 
+            type: 'init', 
+            payload: { url: 'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt' } 
+        });
+
+        this.worker.onmessage = (e) => this.handleWorkerMessage(e.data);
+
         this.setupAuth();
         this.setupNavigation();
-        
-        document.getElementById('btn-unscramble').onclick = () => this.handleUnscramble();
+        this.bindTools();
     }
 
     setupAuth() {
         const lock = document.getElementById('beta-lock');
         const badge = document.getElementById('badge-demo');
-        
-        if (this.unlocked) {
-            badge.classList.add('hidden');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('locked'));
+
+        if (this.isUnlocked) {
+            badge.style.display = 'none';
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('locked'));
         }
 
         document.getElementById('btn-unlock').onclick = () => {
             const input = document.getElementById('beta-code-input').value.toUpperCase();
-            if (btoa(input) === this.SECRET_HASH) {
-                this.unlocked = true;
-                localStorage.setItem('titan_v1_auth', 'true');
-                lock.classList.remove('open');
-                location.reload(); // Refresh to unlock all UI
+            if (btoa(input) === this.SECRET) {
+                localStorage.setItem('titan_auth', 'true');
+                location.reload();
             } else {
-                alert("Invalid Beta Code.");
+                alert("Invalid Access Code.");
             }
         };
 
@@ -41,45 +44,89 @@ class TitanApp {
     }
 
     setupNavigation() {
-        document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.onclick = () => {
-                const viewId = btn.dataset.view;
-                if (!this.unlocked && viewId !== 'unscramble') {
+        const items = document.querySelectorAll('.nav-item');
+        const views = document.querySelectorAll('.page-view');
+
+        items.forEach(item => {
+            item.onclick = () => {
+                const viewId = item.dataset.view;
+                
+                // Gate check
+                if (!this.isUnlocked && viewId !== 'unscramble') {
                     document.getElementById('beta-lock').classList.add('open');
                     return;
                 }
-                // Standard navigation logic here...
-                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+
+                items.forEach(i => i.classList.remove('active'));
+                views.forEach(v => v.classList.remove('active'));
+                
+                item.classList.add('active');
+                document.getElementById(`view-${viewId}`).classList.add('active');
+                document.getElementById('page-title').textContent = item.innerText;
             };
         });
     }
 
-    handleUnscramble() {
-        const letters = document.getElementById('inp-letters').value;
-        
-        if (!this.unlocked && letters.length > 5) {
-            document.getElementById('beta-lock').classList.add('open');
-            return;
-        }
+    bindTools() {
+        // Unscramble
+        document.getElementById('btn-unscramble').onclick = () => {
+            const letters = document.getElementById('inp-letters').value;
+            if (!this.isUnlocked && letters.length > 5) {
+                document.getElementById('beta-lock').classList.add('open');
+                return;
+            }
+            this.sendToWorker('unscramble', { letters }, 'res-unscramble');
+        };
 
-        const container = document.getElementById('res-unscramble');
-        container.innerHTML = 'Thinking...';
-        
-        this.worker.postMessage({ 
-            type: 'unscramble', 
-            payload: { letters, sort: 'length' } 
-        });
+        // Spelling Bee
+        document.getElementById('btn-bee').onclick = () => {
+            const center = document.getElementById('sb-center-input').value;
+            const outer = Array.from(document.querySelectorAll('.hex-input:not(.center)')).map(i => i.value).join('');
+            this.sendToWorker('spellingbee', { center, outer }, 'res-bee');
+        };
 
-        this.worker.onmessage = (e) => {
-            if (e.data.type === 'result') this.render(e.data.data);
+        // Wordle
+        document.getElementById('btn-wordle').onclick = () => {
+            this.sendToWorker('wordle', {
+                green: document.getElementById('w-green').value,
+                yellow: document.getElementById('w-yellow').value,
+                gray: document.getElementById('w-gray').value
+            }, 'res-wordle');
+        };
+
+        // Rhymes (External API)
+        document.getElementById('btn-rhyme').onclick = async () => {
+            const word = document.getElementById('inp-rhyme').value;
+            const res = await fetch(`https://api.datamuse.com/words?rel_rhy=${word}`);
+            const data = await res.json();
+            this.renderResults(data, 'res-rhyme');
         };
     }
 
-    render(data) {
-        const container = document.getElementById('res-unscramble');
-        container.innerHTML = data.map(w => `<div class="word-card">${w.word}</div>`).join('');
+    sendToWorker(type, payload, containerId) {
+        document.getElementById(containerId).innerHTML = '<div style="grid-column:1/-1">Calculating...</div>';
+        this.worker.postMessage({ type, payload, id: containerId });
+    }
+
+    handleWorkerMessage(data) {
+        if (data.type === 'ready') {
+            document.getElementById('status-dot').className = 'status-indicator ready';
+            document.getElementById('status-text').textContent = 'Titan Online';
+        } else if (data.type === 'result') {
+            this.renderResults(data.data, data.id);
+        }
+    }
+
+    renderResults(items, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = items.length ? '' : 'No matches.';
+        items.slice(0, 100).forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'word-card';
+            div.textContent = item.word;
+            container.appendChild(div);
+        });
     }
 }
 
-new TitanApp();
+new LexiconTitan();
