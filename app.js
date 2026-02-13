@@ -92,7 +92,7 @@ class TitanEngine {
         const errorMsg = document.getElementById('auth-error');
         const card = document.getElementById('auth-card');
 
-        if (input === 'TITAN-VIP') {
+        if (input === 'iyuegkwgoeq47834o2eqe') {
             this.isPro = true;
             localStorage.setItem('titan_unlocked', 'true');
             this.checkAuthState();
