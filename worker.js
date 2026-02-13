@@ -2,7 +2,7 @@ let dictionary = [];
 
 const sources = {
     'en': 'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt',
-    'pl': 'https://raw.githubusercontent.com/bieli/polish-dictionary/master/dictionary/pl_PL.dic',
+    'pl': 'https://raw.githubusercontent.com/titoBouzout/Dictionaries/master/Polish.dic',
     'es': 'https://raw.githubusercontent.com/javierarce/palabras/master/listado-general.txt'
 };
 
@@ -14,10 +14,10 @@ self.onmessage = async (e) => {
         const response = await fetch(url);
         const text = await response.text();
         
-        // Split lines, remove dictionary flags (like /n), lowercase, and filter tiny words
+        // Split lines, remove dictionary flags, lowercase, and STRICTLY filter to letters only
         dictionary = text.split(/\r?\n/)
             .map(w => w.split('/')[0].toLowerCase().trim())
-            .filter(w => w.length >= 3);
+            .filter(w => w.length >= 3 && /^\p{L}+$/u.test(w)); 
             
         self.postMessage({ type: 'ready' });
         return;
