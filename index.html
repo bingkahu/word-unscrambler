@@ -3,71 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lexicon Titan | Professional Word Suite</title>
-    <meta name="description" content="Lexicon Titan: The world's fastest word unscrambler, Spelling Bee solver, and Wordle helper. Analyze up to 15 letters instantly.">
+    <title>Lexicon Titan | Professional Word Tools</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="beta-lock" class="modal-overlay hidden">
-        <div class="glass-panel lock-card">
-            <div class="lock-header">
-                <i class="fa-solid fa-shield-halved lock-icon"></i>
-                <span class="lock-status" id="t-lock-status">Encrypted Access</span>
-            </div>
-            <h2 id="t-lock-title">Titan Beta Access</h2>
-            <p id="t-lock-desc">Full access to Spelling Bee, Wordle, and Unlimited Unscrambling is currently locked.</p>
-            
-            <div class="auth-box">
-                <input type="password" id="beta-code-input" placeholder="Enter Access Code...">
-                <button id="btn-unlock" class="primary-btn full"><span id="t-btn-verify">Verify Identity</span></button>
-            </div>
-            
-            <button id="btn-close-lock" class="text-btn" id="t-btn-return">Return to Limited Demo</button>
-        </div>
-    </div>
-
     <div class="app-container">
-        <aside class="sidebar">
+        <div class="mobile-nav-bar">
+            <button id="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
+            <span class="mobile-logo">Titan</span>
+        </div>
+
+        <aside class="sidebar" id="main-sidebar">
             <div class="logo-area">
                 <i class="fa-solid fa-cube fa-spin-pulse"></i>
                 <span>Titan <small>v1.0</small></span>
             </div>
             
             <nav class="nav-menu">
-                <p class="nav-label">Engines</p>
-                <button class="nav-item active" data-view="unscramble">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Unscrambler
-                </button>
-                <button class="nav-item locked" data-view="spellingbee">
-                    <i class="fa-brands fa-hive"></i> Spelling Bee <i class="fa-solid fa-lock mini-lock"></i>
-                </button>
-                <button class="nav-item locked" data-view="wordle">
-                    <i class="fa-solid fa-table-cells"></i> Wordle Solver <i class="fa-solid fa-lock mini-lock"></i>
-                </button>
-                <p class="nav-label">Utility</p>
-                <button class="nav-item locked" data-view="rhymes">
-                    <i class="fa-solid fa-music"></i> Rhyme Finder <i class="fa-solid fa-lock mini-lock"></i>
-                </button>
-            </nav>
-
-            <div class="sidebar-footer">
-                <div id="status-dot" class="status-indicator loading"></div>
-                <span id="status-text">Connecting...</span>
-            </div>
-        </aside>
-
-        <main class="main-content">
-           <aside class="sidebar">
-            <div class="logo-area">
-                <i class="fa-solid fa-cube fa-spin-pulse"></i>
-                <span>Titan <small>v1.0</small></span>
-            </div>
-            
-            <nav class="nav-menu">
-                <p class="nav-label">Engines</p>
+                <p class="nav-label" id="lbl-engines">Engines</p>
                 <button class="nav-item active" data-view="unscramble">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="nav-unscramble-text">Unscrambler</span>
                 </button>
@@ -77,15 +32,18 @@
                 <button class="nav-item locked" data-view="wordle">
                     <i class="fa-solid fa-table-cells"></i> <span id="nav-wordle-text">Wordle Solver</span> <i class="fa-solid fa-lock mini-lock"></i>
                 </button>
-                <p class="nav-label">Utility</p>
+                
+                <p class="nav-label" id="lbl-utility">Utility</p>
                 <button class="nav-item locked" data-view="rhymes">
                     <i class="fa-solid fa-music"></i> <span id="nav-rhymes-text">Rhyme Finder</span> <i class="fa-solid fa-lock mini-lock"></i>
                 </button>
             </nav>
 
             <div class="sidebar-footer">
-                <div id="status-dot" class="status-indicator loading"></div>
-                <span id="status-text">Connecting...</span>
+                <div class="status-box">
+                    <div id="status-dot" class="status-indicator loading"></div>
+                    <span id="status-text">Connecting...</span>
+                </div>
             </div>
         </aside>
 
@@ -98,7 +56,7 @@
                         <option value="pl">🇵🇱 Polski</option>
                         <option value="es">🇪🇸 Español</option>
                     </select>
-                    <div id="badge-demo" class="demo-badge">Demo Mode</div>
+                    <div id="badge-demo" class="demo-badge">Demo</div>
                 </div>
             </header>
 
@@ -168,6 +126,19 @@
         </main>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <div id="beta-lock" class="lock-overlay hidden">
+        <div class="lock-card">
+            <i class="fa-solid fa-shield-halved lock-icon"></i>
+            <h2 id="t-lock-status">Encrypted Access</h2>
+            <h1 id="t-lock-title">Titan Beta Access</h1>
+            <p id="t-lock-desc">Full access is currently locked.</p>
+            <input type="password" id="beta-code-input" placeholder="Enter Beta Key">
+            <button id="btn-unlock" class="primary-btn full" id="t-btn-verify">Verify Identity</button>
+            <button id="btn-close-lock" class="ghost-btn">Return to Limited Demo</button>
+            <p class="lock-footer">Need a key? Contact <strong>@bingkahu</strong></p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
