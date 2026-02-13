@@ -1,13 +1,24 @@
 let dictionary = [];
 
+const sources = {
+    'en': 'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt',
+    'pl': 'https://raw.githubusercontent.com/bieli/polish-dictionary/master/dictionary/pl_PL.dic',
+    'es': 'https://raw.githubusercontent.com/javierarce/palabras/master/listado-general.txt'
+};
+
 self.onmessage = async (e) => {
-    const { type, url, payload, containerId } = e.data;
+    const { type, lang, payload, containerId } = e.data;
 
     if (type === 'init') {
+        const url = sources[lang] || sources['en'];
         const response = await fetch(url);
         const text = await response.text();
-        // Load words and filter out short junk
-        dictionary = text.split(/\r?\n/).filter(w => w.length >= 3);
+        
+        // Split lines, remove dictionary flags (like /n), lowercase, and filter tiny words
+        dictionary = text.split(/\r?\n/)
+            .map(w => w.split('/')[0].toLowerCase().trim())
+            .filter(w => w.length >= 3);
+            
         self.postMessage({ type: 'ready' });
         return;
     }
@@ -43,11 +54,8 @@ self.onmessage = async (e) => {
         
         results = dictionary.filter(w => {
             if (w.length !== 5) return false;
-            // Gray check
             for (let char of gray) if (w.includes(char)) return false;
-            // Yellow check
             for (let char of yellow) if (!w.includes(char)) return false;
-            // Green pattern check
             return pattern.test(w);
         });
     }
