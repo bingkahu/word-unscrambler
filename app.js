@@ -1,21 +1,48 @@
 const i18n = {
     en: {
-        title: "Unscrambler", placeholder: "Enter your letters...", btnAnalyze: "Analyze",
+        navUnscramble: "Unscrambler", navBee: "Spelling Bee", navWordle: "Wordle Solver", navRhymes: "Rhyme Finder",
+        titleUnscramble: "Unscrambler", titleBee: "Spelling Bee", titleWordle: "Wordle Solver", titleRhymes: "Rhyme Finder",
+        plUnscramble: "Enter your letters...", btnUnscramble: "Analyze",
+        beeTitle: "Honeycomb Solver", btnBee: "Find Bee Words",
+        wLblGreen: "Green (Correct Spot)", wPlGreen: "e.g. .a.e. (dots for blanks)",
+        wLblYellow: "Yellow (Wrong Spot)", wPlYellow: "letters to include",
+        wLblGray: "Gray (Excluded)", wPlGray: "letters to avoid", btnWordle: "Filter Dictionary",
+        plRhyme: "Type a word to rhyme with...", btnRhyme: "Search",
         lockStatus: "Encrypted Access", lockTitle: "Titan Beta Access",
         lockDesc: "Full access to Spelling Bee, Wordle, and Unlimited Unscrambling is currently locked.",
-        btnVerify: "Verify Identity", btnReturn: "Return to Limited Demo"
+        btnVerify: "Verify Identity", btnReturn: "Return to Limited Demo",
+        statusLoading: "Loading EN Lexicon...", statusReady: "EN Engine Online",
+        crunching: "Crunching Shards...", noMatches: "No valid matches found.", rhymeError: "Rhymes currently only support English and Spanish."
     },
     pl: {
-        title: "Anagramator", placeholder: "Wpisz litery...", btnAnalyze: "Analizuj",
-        lockStatus: "Szyfrowany dostęp", lockTitle: "Dostęp Titan Beta",
+        navUnscramble: "Anagramator", navBee: "Spelling Bee", navWordle: "Wordle Solver", navRhymes: "Szukaj Rymów",
+        titleUnscramble: "Anagramator", titleBee: "Spelling Bee", titleWordle: "Wordle Solver", titleRhymes: "Szukaj Rymów",
+        plUnscramble: "Wpisz litery...", btnUnscramble: "Analizuj",
+        beeTitle: "Rozwiązywanie Plastra", btnBee: "Znajdź Słowa",
+        wLblGreen: "Zielony (Dobre Miejsce)", wPlGreen: "np. .a.e. (kropki na puste)",
+        wLblYellow: "Żółty (Złe Miejsce)", wPlYellow: "wymagane litery",
+        wLblGray: "Szary (Wykluczone)", wPlGray: "wykluczone litery", btnWordle: "Filtruj Słownik",
+        plRhyme: "Wpisz słowo do rymu...", btnRhyme: "Szukaj",
+        lockStatus: "Dostęp Szyfrowany", lockTitle: "Dostęp Titan Beta",
         lockDesc: "Pełny dostęp do Spelling Bee, Wordle i Nielimitowanego układania słów jest zablokowany.",
-        btnVerify: "Potwierdź tożsamość", btnReturn: "Wróć do wersji Demo"
+        btnVerify: "Potwierdź tożsamość", btnReturn: "Wróć do wersji Demo",
+        statusLoading: "Pobieranie bazy PL...", statusReady: "Silnik PL Gotowy",
+        crunching: "Przetwarzanie...", noMatches: "Brak pasujących słów.", rhymeError: "Wyszukiwarka rymów nie obsługuje języka polskiego."
     },
     es: {
-        title: "Descifrador", placeholder: "Introduce tus letras...", btnAnalyze: "Analizar",
+        navUnscramble: "Descifrador", navBee: "Spelling Bee", navWordle: "Wordle Solver", navRhymes: "Buscador Rimas",
+        titleUnscramble: "Descifrador", titleBee: "Spelling Bee", titleWordle: "Wordle Solver", titleRhymes: "Buscador Rimas",
+        plUnscramble: "Introduce tus letras...", btnUnscramble: "Analizar",
+        beeTitle: "Solucionador de Panal", btnBee: "Encontrar Palabras",
+        wLblGreen: "Verde (Lugar Correcto)", wPlGreen: "ej. .a.e. (puntos para vacíos)",
+        wLblYellow: "Amarillo (Lugar Incorrecto)", wPlYellow: "letras a incluir",
+        wLblGray: "Gris (Excluidas)", wPlGray: "letras a evitar", btnWordle: "Filtrar Diccionario",
+        plRhyme: "Escribe una palabra para rimar...", btnRhyme: "Buscar",
         lockStatus: "Acceso Encriptado", lockTitle: "Acceso Beta Titan",
         lockDesc: "El acceso completo a Spelling Bee, Wordle y Descifrador Ilimitado está bloqueado actualmente.",
-        btnVerify: "Verificar Identidad", btnReturn: "Volver a la Demo"
+        btnVerify: "Verificar Identidad", btnReturn: "Volver a la Demo",
+        statusLoading: "Cargando léxico ES...", statusReady: "Motor ES en línea",
+        crunching: "Procesando...", noMatches: "No se encontraron coincidencias.", rhymeError: "Error al buscar rimas."
     }
 };
 
@@ -23,9 +50,8 @@ class TitanEngine {
     constructor() {
         this.worker = new Worker('worker.js');
         this.unlocked = localStorage.getItem('titan_v1_secure') === 'true';
-        this.AUTH_HASH = "131325c1df02b3ece2ca223db417ae876b1e2a2b854ff4e20456246409f1658d"; // "TITAN2026"
+        this.AUTH_HASH = "131325c1df02b3ece2ca223db417ae876b1e2a2b854ff4e20456246409f1658d";
         this.currentLang = 'en';
-        
         this.init();
     }
 
@@ -39,8 +65,9 @@ class TitanEngine {
     }
 
     loadDictionary() {
+        const t = i18n[this.currentLang];
         document.getElementById('status-dot').className = 'status-indicator loading';
-        document.getElementById('status-text').textContent = `Loading ${this.currentLang.toUpperCase()} Lexicon...`;
+        document.getElementById('status-text').textContent = t.statusLoading;
         this.worker.postMessage({ type: 'init', lang: this.currentLang });
     }
 
@@ -49,17 +76,46 @@ class TitanEngine {
         switcher.addEventListener('change', (e) => {
             this.currentLang = e.target.value;
             this.applyTranslations();
-            this.loadDictionary(); // Tell worker to swap language database
+            this.loadDictionary();
         });
     }
 
     applyTranslations() {
         const t = i18n[this.currentLang];
-        document.getElementById('page-title').textContent = t.title;
-        document.getElementById('inp-letters').placeholder = t.placeholder;
-        document.getElementById('btn-unscramble').textContent = t.btnAnalyze;
         
-        // Update Lock Screen
+        // Sidebar
+        document.getElementById('nav-unscramble-text').textContent = t.navUnscramble;
+        document.getElementById('nav-bee-text').textContent = t.navBee;
+        document.getElementById('nav-wordle-text').textContent = t.navWordle;
+        document.getElementById('nav-rhymes-text').textContent = t.navRhymes;
+
+        // Current Page Title
+        const activeNav = document.querySelector('.nav-item.active').dataset.view;
+        const titleMap = { unscramble: t.titleUnscramble, spellingbee: t.titleBee, wordle: t.titleWordle, rhymes: t.titleRhymes };
+        document.getElementById('page-title').textContent = titleMap[activeNav];
+
+        // Unscrambler View
+        document.getElementById('inp-letters').placeholder = t.plUnscramble;
+        document.getElementById('btn-unscramble').textContent = t.btnUnscramble;
+
+        // Spelling Bee View
+        document.getElementById('bee-title').textContent = t.beeTitle;
+        document.getElementById('btn-bee').textContent = t.btnBee;
+
+        // Wordle View
+        document.getElementById('w-lbl-green').textContent = t.wLblGreen;
+        document.getElementById('w-green').placeholder = t.wPlGreen;
+        document.getElementById('w-lbl-yellow').textContent = t.wLblYellow;
+        document.getElementById('w-yellow').placeholder = t.wPlYellow;
+        document.getElementById('w-lbl-gray').textContent = t.wLblGray;
+        document.getElementById('w-gray').placeholder = t.wPlGray;
+        document.getElementById('btn-wordle').textContent = t.btnWordle;
+
+        // Rhymes View
+        document.getElementById('inp-rhyme').placeholder = t.plRhyme;
+        document.getElementById('btn-rhyme').textContent = t.btnRhyme;
+
+        // Lock Screen
         document.getElementById('t-lock-status').textContent = t.lockStatus;
         document.getElementById('t-lock-title').textContent = t.lockTitle;
         document.getElementById('t-lock-desc').textContent = t.lockDesc;
@@ -121,12 +177,9 @@ class TitanEngine {
                 item.classList.add('active');
                 document.getElementById(`view-${target}`).classList.add('active');
                 
-                // Keep Unscrambler translated, but default others
-                if (target === 'unscramble') {
-                    document.getElementById('page-title').textContent = i18n[this.currentLang].title;
-                } else {
-                    document.getElementById('page-title').textContent = item.innerText.trim();
-                }
+                const t = i18n[this.currentLang];
+                const titleMap = { unscramble: t.titleUnscramble, spellingbee: t.titleBee, wordle: t.titleWordle, rhymes: t.titleRhymes };
+                document.getElementById('page-title').textContent = titleMap[target];
             };
         });
     }
@@ -156,22 +209,34 @@ class TitanEngine {
         };
 
         document.getElementById('btn-rhyme').onclick = async () => {
+            const t = i18n[this.currentLang];
+            
+            // Datamuse API does not support Polish
+            if (this.currentLang === 'pl') {
+                document.getElementById('res-rhyme').innerHTML = `<div class="word-card">${t.rhymeError}</div>`;
+                return;
+            }
+
             const word = document.getElementById('inp-rhyme').value;
-            const res = await fetch(`https://api.datamuse.com/words?rel_rhy=${word}`);
+            const langFlag = this.currentLang === 'es' ? '&v=es' : '';
+            
+            document.getElementById('res-rhyme').innerHTML = `<div style="grid-column:1/-1; opacity:0.6;">${t.crunching}</div>`;
+            const res = await fetch(`https://api.datamuse.com/words?rel_rhy=${word}${langFlag}`);
             const data = await res.json();
             this.render(data, 'res-rhyme');
         };
     }
 
     runQuery(type, payload, containerId) {
-        document.getElementById(containerId).innerHTML = '<div style="grid-column:1/-1; opacity:0.6;">Crunching Shards...</div>';
+        document.getElementById(containerId).innerHTML = `<div style="grid-column:1/-1; opacity:0.6;">${i18n[this.currentLang].crunching}</div>`;
         this.worker.postMessage({ type, payload, containerId });
     }
 
     handleMessage(data) {
+        const t = i18n[this.currentLang];
         if (data.type === 'ready') {
             document.getElementById('status-dot').className = 'status-indicator ready';
-            document.getElementById('status-text').textContent = `${this.currentLang.toUpperCase()} Engine Online`;
+            document.getElementById('status-text').textContent = t.statusReady;
         } else if (data.type === 'results') {
             this.render(data.words, data.containerId);
         }
@@ -179,7 +244,7 @@ class TitanEngine {
 
     render(list, containerId) {
         const container = document.getElementById(containerId);
-        container.innerHTML = list.length ? "" : "No valid matches found.";
+        container.innerHTML = list.length ? "" : i18n[this.currentLang].noMatches;
         list.slice(0, 100).forEach(w => {
             const card = document.createElement('div');
             card.className = 'word-card';
