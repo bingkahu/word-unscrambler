@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="google-site-verification" content="3pdJmGlT0SglevFbujbU42dS8trgELKS-ZpVoxxMva8" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lexicon Titan | Professional Word Suite</title>
+    <meta name="description" content="Lexicon Titan: The world's fastest word unscrambler, Spelling Bee solver, and Wordle helper. Analyze up to 15 letters instantly.">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><polygon points=%2250,5 95,25 95,75 50,95 5,75 5,25%22 fill=%22%234f46e5%22/><text y=%22.65em%22 x=%2250%22 font-family=%22Arial%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22 font-weight=%22bold%22>T</text></svg>">
 </head>
 <body>
 
@@ -16,18 +15,17 @@
         <div class="glass-panel lock-card">
             <div class="lock-header">
                 <i class="fa-solid fa-shield-halved lock-icon"></i>
-                <span class="lock-status">Encrypted Access</span>
+                <span class="lock-status" id="t-lock-status">Encrypted Access</span>
             </div>
-            <h2>Titan Beta Access</h2>
-            <p>Full access to Spelling Bee, Wordle, and Unlimited Unscrambling is currently locked.</p>
+            <h2 id="t-lock-title">Titan Beta Access</h2>
+            <p id="t-lock-desc">Full access to Spelling Bee, Wordle, and Unlimited Unscrambling is currently locked.</p>
             
             <div class="auth-box">
                 <input type="password" id="beta-code-input" placeholder="Enter Access Code...">
-                <button id="btn-unlock" class="primary-btn full">Verify Identity</button>
+                <button id="btn-unlock" class="primary-btn full"><span id="t-btn-verify">Verify Identity</span></button>
             </div>
             
-            <button id="btn-close-lock" class="text-btn">Return to Limited Demo</button>
-            <div class="contact-hint">Need a key? Contact <strong>@bingkahu</strong></div>
+            <button id="btn-close-lock" class="text-btn" id="t-btn-return">Return to Limited Demo</button>
         </div>
     </div>
 
@@ -64,23 +62,30 @@
         <main class="main-content">
             <header class="top-bar">
                 <h2 id="page-title">Unscrambler</h2>
-                <div id="badge-demo" class="demo-badge">Demo Mode (5 Letters)</div>
+                
+                <div class="top-controls">
+                    <select id="lang-switcher" class="lang-select">
+                        <option value="en">🇺🇸 English</option>
+                        <option value="pl">🇵🇱 Polski</option>
+                        <option value="es">🇪🇸 Español</option>
+                    </select>
+                    <div id="badge-demo" class="demo-badge">Demo Mode</div>
+                </div>
             </header>
 
             <section id="view-unscramble" class="page-view active">
                 <div class="glass-panel">
                     <div class="input-group-lg">
-                        <input type="text" id="inp-letters" placeholder="Enter your letters (e.g., 'lexicon')..." autocomplete="off">
+                        <input type="text" id="inp-letters" placeholder="Enter your letters..." autocomplete="off">
                         <button id="btn-unscramble" class="primary-btn">Analyze</button>
                     </div>
                 </div>
                 <div id="res-unscramble" class="results-grid"></div>
             </section>
-
+            
             <section id="view-spellingbee" class="page-view">
                 <div class="glass-panel hive-container">
                     <h3>Honeycomb Solver</h3>
-                    <p>Enter the center letter and the 6 surrounding letters.</p>
                     <div class="hive-inputs">
                         <div class="hex-row">
                             <input type="text" class="hex-in" id="bee-1" maxlength="1">
@@ -100,7 +105,7 @@
                 </div>
                 <div id="res-bee" class="results-grid"></div>
             </section>
-
+            
             <section id="view-wordle" class="page-view">
                 <div class="glass-panel">
                     <div class="wordle-filters">
@@ -131,6 +136,7 @@
                 </div>
                 <div id="res-rhyme" class="results-grid"></div>
             </section>
+
         </main>
     </div>
 
