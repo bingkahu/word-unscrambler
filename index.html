@@ -14,14 +14,14 @@
     <div class="app-container">
         <div class="mobile-nav-bar">
             <button id="mobile-menu-btn" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
-            <span class="mobile-logo">Titan</span>
+            <span class="mobile-logo">Titan <i class="fa-solid fa-cube fa-spin-pulse" style="color: var(--accent); font-size: 0.8rem;"></i></span>
             <div id="mobile-status-dot-mini" class="status-indicator loading"></div>
         </div>
 
         <aside class="sidebar" id="main-sidebar">
             <div class="logo-area">
                 <i class="fa-solid fa-cube fa-spin-pulse"></i>
-                <span>Titan <small>v1.0</small></span>
+                <span>Titan <small>v2.0</small></span>
             </div>
             
             <nav class="nav-menu">
@@ -29,15 +29,15 @@
                 <button class="nav-item active" data-view="unscramble">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="nav-unscramble-text">Unscrambler</span>
                 </button>
-                <button class="nav-item locked" data-view="spellingbee">
+                <button class="nav-item locked auth-required" data-view="spellingbee">
                     <i class="fa-brands fa-hive"></i> <span id="nav-bee-text">Spelling Bee</span> <i class="fa-solid fa-lock mini-lock"></i>
                 </button>
-                <button class="nav-item locked" data-view="wordle">
+                <button class="nav-item locked auth-required" data-view="wordle">
                     <i class="fa-solid fa-table-cells"></i> <span id="nav-wordle-text">Wordle Solver</span> <i class="fa-solid fa-lock mini-lock"></i>
                 </button>
                 
                 <p class="nav-label" id="lbl-utility">Utility</p>
-                <button class="nav-item locked" data-view="rhymes">
+                <button class="nav-item locked auth-required" data-view="rhymes">
                     <i class="fa-solid fa-music"></i> <span id="nav-rhymes-text">Rhyme Finder</span> <i class="fa-solid fa-lock mini-lock"></i>
                 </button>
             </nav>
@@ -59,15 +59,16 @@
                         <option value="pl">🇵🇱 Polski</option>
                         <option value="es">🇪🇸 Español</option>
                     </select>
-                    <div id="badge-demo" class="demo-badge">Demo</div>
+                    <div id="badge-demo" class="demo-badge">Beta</div>
                 </div>
             </header>
 
             <div id="view-container">
                 <section id="view-unscramble" class="page-view active">
-                    <div class="glass-panel">
+                    <div class="glass-panel glow-panel">
+                        <p class="panel-desc">Enter up to 12 scrambled letters to find all valid words.</p>
                         <div class="input-group-lg">
-                            <input type="text" id="inp-letters" placeholder="Enter your letters..." autocomplete="off">
+                            <input type="text" id="inp-letters" placeholder="e.g. atin" autocomplete="off" maxlength="12">
                             <button id="btn-unscramble" class="primary-btn">Analyze</button>
                         </div>
                     </div>
@@ -75,21 +76,22 @@
                 </section>
                 
                 <section id="view-spellingbee" class="page-view">
-                    <div class="glass-panel hive-container">
+                    <div class="glass-panel hive-container glow-panel">
                         <h3 id="bee-title">Honeycomb Solver</h3>
+                        <p class="panel-desc">Enter the 6 outer letters and the 1 center (★) letter.</p>
                         <div class="hive-inputs">
                             <div class="hex-row">
-                                <input type="text" class="hex-in" id="bee-1" maxlength="1">
-                                <input type="text" class="hex-in" id="bee-2" maxlength="1">
+                                <input type="text" class="hex-in" id="bee-1" maxlength="1" autocomplete="off">
+                                <input type="text" class="hex-in" id="bee-2" maxlength="1" autocomplete="off">
                             </div>
                             <div class="hex-row">
-                                <input type="text" class="hex-in" id="bee-3" maxlength="1">
-                                <input type="text" class="hex-in center" id="bee-center" maxlength="1" placeholder="★">
-                                <input type="text" class="hex-in" id="bee-4" maxlength="1">
+                                <input type="text" class="hex-in" id="bee-3" maxlength="1" autocomplete="off">
+                                <input type="text" class="hex-in center" id="bee-center" maxlength="1" placeholder="★" autocomplete="off">
+                                <input type="text" class="hex-in" id="bee-4" maxlength="1" autocomplete="off">
                             </div>
                             <div class="hex-row">
-                                <input type="text" class="hex-in" id="bee-5" maxlength="1">
-                                <input type="text" class="hex-in" id="bee-6" maxlength="1">
+                                <input type="text" class="hex-in" id="bee-5" maxlength="1" autocomplete="off">
+                                <input type="text" class="hex-in" id="bee-6" maxlength="1" autocomplete="off">
                             </div>
                         </div>
                         <button id="btn-bee" class="primary-btn full">Find Bee Words</button>
@@ -98,19 +100,20 @@
                 </section>
                 
                 <section id="view-wordle" class="page-view">
-                    <div class="glass-panel">
+                    <div class="glass-panel glow-panel">
+                        <p class="panel-desc">Use dots (.) for unknown letters. Example: <strong>.a.e.</strong></p>
                         <div class="wordle-filters">
                             <div class="f-group">
-                                <label id="w-lbl-green">Green (Correct Spot)</label>
-                                <input type="text" id="w-green" placeholder="e.g. .a.e." maxlength="5">
+                                <label id="w-lbl-green" class="txt-green">🟩 Green (Exact)</label>
+                                <input type="text" id="w-green" placeholder="....." maxlength="5" autocomplete="off">
                             </div>
                             <div class="f-group">
-                                <label id="w-lbl-yellow">Yellow (Wrong Spot)</label>
-                                <input type="text" id="w-yellow" placeholder="letters to include">
+                                <label id="w-lbl-yellow" class="txt-yellow">🟨 Yellow (Contains)</label>
+                                <input type="text" id="w-yellow" placeholder="e.g. r, t" autocomplete="off">
                             </div>
                             <div class="f-group">
-                                <label id="w-lbl-gray">Gray (Excluded)</label>
-                                <input type="text" id="w-gray" placeholder="letters to avoid">
+                                <label id="w-lbl-gray" class="txt-gray">⬛ Gray (Exclude)</label>
+                                <input type="text" id="w-gray" placeholder="e.g. z, x, q" autocomplete="off">
                             </div>
                         </div>
                         <button id="btn-wordle" class="primary-btn full">Filter Dictionary</button>
@@ -119,9 +122,10 @@
                 </section>
 
                 <section id="view-rhymes" class="page-view">
-                    <div class="glass-panel">
+                    <div class="glass-panel glow-panel">
+                        <p class="panel-desc">Powered by live Datamuse API.</p>
                         <div class="input-group-lg">
-                            <input type="text" id="inp-rhyme" placeholder="Type a word...">
+                            <input type="text" id="inp-rhyme" placeholder="Type a word..." autocomplete="off">
                             <button id="btn-rhyme" class="primary-btn">Search</button>
                         </div>
                     </div>
@@ -132,14 +136,23 @@
     </div>
 
     <div id="beta-lock" class="lock-overlay hidden">
-        <div class="lock-card">
-            <i class="fa-solid fa-shield-halved lock-icon"></i>
-            <h2 id="t-lock-status">Encrypted Access</h2>
-            <h1 id="t-lock-title">Titan Beta Access</h1>
-            <p id="t-lock-desc">Full access is currently locked.</p>
-            <input type="password" id="beta-code-input" placeholder="Enter Beta Key">
-            <button id="btn-unlock" class="primary-btn full">Verify Identity</button>
+        <div class="lock-card" id="auth-card">
+            <div class="auth-header">
+                <i class="fa-solid fa-shield-halved lock-icon"></i>
+            </div>
+            <h2 id="t-lock-status" class="accent-text">ENCRYPTED ACCESS</h2>
+            <h1 id="t-lock-title">Titan Authentication</h1>
+            <p id="t-lock-desc">Enter your Beta Key to unlock all Pro Engines.</p>
+            
+            <div class="auth-input-group">
+                <input type="password" id="beta-code-input" placeholder="Enter Beta Key..." autocomplete="off">
+                <p id="auth-error" class="error-msg hidden">Invalid Access Code</p>
+            </div>
+
+            <button id="btn-unlock" class="primary-btn full pulse-btn">Verify Identity</button>
             <button id="btn-close-lock" class="ghost-btn">Return to Demo</button>
+            
+            <p class="lock-footer">Hint: Try contacting <strong>lesjubejwk@outlook.com</strong></p>
         </div>
     </div>
 
