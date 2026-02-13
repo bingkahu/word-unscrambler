@@ -60,9 +60,38 @@
         </aside>
 
         <main class="main-content">
+           <aside class="sidebar">
+            <div class="logo-area">
+                <i class="fa-solid fa-cube fa-spin-pulse"></i>
+                <span>Titan <small>v1.0</small></span>
+            </div>
+            
+            <nav class="nav-menu">
+                <p class="nav-label">Engines</p>
+                <button class="nav-item active" data-view="unscramble">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="nav-unscramble-text">Unscrambler</span>
+                </button>
+                <button class="nav-item locked" data-view="spellingbee">
+                    <i class="fa-brands fa-hive"></i> <span id="nav-bee-text">Spelling Bee</span> <i class="fa-solid fa-lock mini-lock"></i>
+                </button>
+                <button class="nav-item locked" data-view="wordle">
+                    <i class="fa-solid fa-table-cells"></i> <span id="nav-wordle-text">Wordle Solver</span> <i class="fa-solid fa-lock mini-lock"></i>
+                </button>
+                <p class="nav-label">Utility</p>
+                <button class="nav-item locked" data-view="rhymes">
+                    <i class="fa-solid fa-music"></i> <span id="nav-rhymes-text">Rhyme Finder</span> <i class="fa-solid fa-lock mini-lock"></i>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div id="status-dot" class="status-indicator loading"></div>
+                <span id="status-text">Connecting...</span>
+            </div>
+        </aside>
+
+        <main class="main-content">
             <header class="top-bar">
                 <h2 id="page-title">Unscrambler</h2>
-                
                 <div class="top-controls">
                     <select id="lang-switcher" class="lang-select">
                         <option value="en">🇺🇸 English</option>
@@ -85,7 +114,7 @@
             
             <section id="view-spellingbee" class="page-view">
                 <div class="glass-panel hive-container">
-                    <h3>Honeycomb Solver</h3>
+                    <h3 id="bee-title">Honeycomb Solver</h3>
                     <div class="hive-inputs">
                         <div class="hex-row">
                             <input type="text" class="hex-in" id="bee-1" maxlength="1">
@@ -110,15 +139,15 @@
                 <div class="glass-panel">
                     <div class="wordle-filters">
                         <div class="f-group">
-                            <label>Green (Correct Spot)</label>
+                            <label id="w-lbl-green">Green (Correct Spot)</label>
                             <input type="text" id="w-green" placeholder="e.g. .a.e. (dots for blanks)" maxlength="5">
                         </div>
                         <div class="f-group">
-                            <label>Yellow (Wrong Spot)</label>
+                            <label id="w-lbl-yellow">Yellow (Wrong Spot)</label>
                             <input type="text" id="w-yellow" placeholder="letters to include">
                         </div>
                         <div class="f-group">
-                            <label>Gray (Excluded)</label>
+                            <label id="w-lbl-gray">Gray (Excluded)</label>
                             <input type="text" id="w-gray" placeholder="letters to avoid">
                         </div>
                     </div>
@@ -136,7 +165,6 @@
                 </div>
                 <div id="res-rhyme" class="results-grid"></div>
             </section>
-
         </main>
     </div>
 
