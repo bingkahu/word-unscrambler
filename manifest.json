@@ -1,18 +1,15 @@
 {
   "name": "Lexicon Titan",
   "short_name": "Titan",
-  "description": "Professional Multilingual Word Tools",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/5024/5024467.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
